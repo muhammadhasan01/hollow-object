@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>WebGL Demo</title>
-    <link rel="stylesheet" href="../webgl.css" type="text/css">
+    <link rel="stylesheet" href="webgl.css" type="text/css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
       integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
       crossorigin="anonymous" defer>
@@ -12,6 +12,37 @@
   </head>
 
   <body>
+    <h1>Canvas Web GL</h1>
     <canvas id="glcanvas" width="640" height="480"></canvas>
+    <!-- <input type="range" min="0" max="360" value="0" class="slider" id="myRange">
+    <p>Value: <span id="demo"></span></p> -->
+    <div>
+      <label for="x">x</label>
+      <input type="range" min="-640" max="640" value="10" class="slider" id="x" name="x">
+    </div>
+    <div>
+      <label for="y">y</label>
+      <input type="range" min="-480" max="480" value="0" class="slider" id="y" name="y">
+    </div>
+    <div>
+      <label for="z">z</label>
+      <input type="range" min="-480" max="480" value="400" class="slider" id="z" name="z">
+    </div>  
+    <div>
+      <label for="angleX">angleX</label>
+      <input type="range" min="0" max="360" value="200" class="slider" id="angleX" name="angleX">
+    </div>
+    <div>
+      <label for="angleY">angleY</label>
+      <input type="range" min="0" max="360" value="320" class="slider" id="angleY" name="angleY">
+    </div>
+    <div>
+      <label for="angleZ">angleZ</label>
+      <input type="range" min="0" max="360" value="0" class="slider" id="angleZ" name="angleZ">
+    </div>
+    <div>
+      <label for="scale">scale</label>
+      <input type="range" min="-2" max="2" value="1" class="slider" id="scale" name="scale" step="0.001">
+    </div>
   </body>
 </html>
