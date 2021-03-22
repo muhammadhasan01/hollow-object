@@ -1,15 +1,39 @@
-var cubeRotation = 0.0;
+// Object Function
 
-// var output = document.getElementById("demo");
-// output.innerHTML = slider.value;
+defaultData =
+  {
+    "positions": [
+        -1.0, -1.0,  0.0,
+        1.0, -1.0,  0.0,
+        1.0,  1.0,  1.0,
+       -1.0,  1.0,  1.0,
 
-// slider.oninput = function() {
-//   output.innerHTML = this.value;
-// }
+       -1.0, -1.0, 0.0,
+       -1.0,  1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0, -1.0, 0.0,
+   
+       -1.0,  1.0, -1.0,
+       -1.0,  1.0,  1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0
+    ],
+    "indices": [
+        0,  1,  2,      0,  2,  3,   
+        4,  5,  6,      4,  6,  7,   
+        8,  9,  10,     8,  10, 11,  
+        12, 13, 14,     12, 14, 15,  
+        16, 17, 18,     16, 18, 19,  
+        20, 21, 22,     20, 22, 23
+    ],
+    "faceColors": [
+        [1.0,  1.0,  1.0,  1.0], 
+        [1.0,  0.0,  0.0,  1.0],    
+        [0.0,  1.0,  0.0,  1.0]
+    ],
+    "vertexCount": 20
+}
 
-//
-// Start here
-//
 function translate(out, a, v) {
   let x = v[0],
     y = v[1],
@@ -146,6 +170,7 @@ function scale(out, a, v) {
 }
 
 function main() {
+  
   const canvas = document.querySelector('#glcanvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
@@ -227,6 +252,16 @@ function main() {
 // have one object -- a simple three-dimensional cube.
 //
 function initBuffers(gl) {
+  const {positions, indices, faceColors, vertexCount} = defaultData;
+  console.log(positions);
+  console.log(indices);
+  console.log(faceColors);
+  console.log(vertexCount);
+  console.log("default Gan");
+  if (!globalData){
+    const {positions, indices, faceColors, vertexCount} = globalData;
+    console.log("Global Gan");
+  }
 
   // Create a buffer for the cube's vertex positions.
 
@@ -239,45 +274,16 @@ function initBuffers(gl) {
 
   // Now create an array of positions for the cube.
 
-  const positions2 = [
-    // Front face
-    -1.0, -1.0,  0.0,
-     1.0, -1.0,  0.0,
-     1.0,  1.0,  1.0,
-    -1.0,  1.0,  1.0,
-
-    // Back face
-    -1.0, -1.0, 0.0,
-    -1.0,  1.0, -1.0,
-     1.0,  1.0, -1.0,
-     1.0, -1.0, 0.0,
-
-    // Top face
-    -1.0,  1.0, -1.0,
-    -1.0,  1.0,  1.0,
-     1.0,  1.0,  1.0,
-     1.0,  1.0, -1.0,
-  ];
-
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
   // JavaScript array, then use it to fill the current buffer.
 
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(  positions2), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
   // Now set up the colors for the faces. We'll use solid colors
   // for each face.
 
-  const faceColors = [
-    [1.0,  1.0,  1.0,  1.0],    // Front face: white
-    [1.0,  0.0,  0.0,  1.0],    // Back face: red
-    [0.0,  1.0,  0.0,  1.0],    // Top face: green
-
-  ];
-
   // Convert the array of colors into a table for all the vertices.
-
-  var colors = [];
 
   for (var j = 0; j < faceColors.length; ++j) {
     const c = faceColors[j];
@@ -299,15 +305,6 @@ function initBuffers(gl) {
   // This array defines each face as two triangles, using the
   // indices into the vertex array to specify each triangle's
   // position.
-
-  const indices = [
-    0,  1,  2,      0,  2,  3,    // front
-    4,  5,  6,      4,  6,  7,    // back
-    8,  9,  10,     8,  10, 11,   // top
-    12, 13, 14,     12, 14, 15,   // bottom
-    16, 17, 18,     16, 18, 19,   // right
-    20, 21, 22,     20, 22, 23,   // left
-  ];
 
   // Now send the element array to GL
 
@@ -516,5 +513,3 @@ function loadShader(gl, type, source) {
 
   return shader;
 }
-
-main();

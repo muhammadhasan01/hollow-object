@@ -8,6 +8,7 @@
       integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
       crossorigin="anonymous" defer>
     </script>
+    <script type="text/javascript" src="data.js" defer></script>
     <script src="webgl-demo.js" defer></script>
   </head>
 
@@ -44,5 +45,9 @@
       <label for="scale">scale</label>
       <input type="range" min="-2" max="2" value="1" class="slider" id="scale" name="scale" step="0.001">
     </div>
+    <div>
+      <label for="loadFile">Load Models</label>
+      <input id="load" type="file" onchange="loadGlobalData();" /> </br>
+    </div>    
   </body>
 </html>
