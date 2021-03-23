@@ -1,5 +1,7 @@
 var cubeRotation = 0.0;
 
+
+
 main();
 
 //
@@ -63,7 +65,20 @@ function main() {
   // objects we'll be drawing.
   const buffers = initBuffers(gl);
 
+  // Declare variables
   var then = 0;
+
+  // Declare variables DOM
+  var cameraAngleDOM = document.getElementById('cameraAngle');
+  var cameraZoomDOM = document.getElementById('cameraZoom');
+  var perspectiveDOM = document.getElementById('perspectiveOption');
+
+  // Declare program controls variables from input
+  var programControls = {
+    radius: 5.5,
+    cameraAngleRadian: 0,
+    perspectiveType: "oblique",
+  };
 
   // Draw the scene repeatedly
   function render(now) {
@@ -71,10 +86,39 @@ function main() {
     const deltaTime = now - then;
     then = now;
 
-    drawScene(gl, programInfo, buffers, deltaTime);
+    drawScene(gl, programInfo, buffers, deltaTime, programControls);
 
     requestAnimationFrame(render);
   }
+
+  // Helper function for camera angle input
+  function valForAngle(r) {
+    return ((r - 50.0) * Math.PI) / 25.0;
+  }
+  // Helper function for camera zoom input
+  function valForZoom(r) {
+    return -((r - 50.0) / 25.0) + 5.5;
+  }
+
+  // Render function if the camera angle is changed
+  cameraAngleDOM.oninput = (e) => {
+    programControls.cameraAngleRadian = valForAngle(e.target.value);
+
+    requestAnimationFrame(render);
+  }
+  // Render function if the camera zoom is changed
+  cameraZoomDOM.oninput = (e) => {
+    programControls.radius = valForZoom(e.target.value);
+
+    requestAnimationFrame(render);
+  };
+  // Render function if the perspective option is changed
+  perspectiveDOM.onchange = (e) => {
+    programControls.perspectiveType = e.target.value;
+
+    requestAnimationFrame(render);
+  }
+
   requestAnimationFrame(render);
 }
 
@@ -121,18 +165,6 @@ function initBuffers(gl) {
      1.0, -1.0, -1.0,
      1.0, -1.0,  1.0,
     -1.0, -1.0,  1.0,
-
-    // Right face
-     1.0, -1.0, -1.0,
-     1.0,  1.0, -1.0,
-     1.0,  1.0,  1.0,
-     1.0, -1.0,  1.0,
-
-    // Left face
-    -1.0, -1.0, -1.0,
-    -1.0, -1.0,  1.0,
-    -1.0,  1.0,  1.0,
-    -1.0,  1.0, -1.0,
   ];
 
   // Now pass the list of positions into WebGL to build the
@@ -149,8 +181,6 @@ function initBuffers(gl) {
     [1.0,  0.0,  0.0,  1.0],    // Back face: red
     [0.0,  1.0,  0.0,  1.0],    // Top face: green
     [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-    [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-    [1.0,  0.0,  1.0,  1.0],    // Left face: purple
   ];
 
   // Convert the array of colors into a table for all the vertices.
@@ -183,8 +213,6 @@ function initBuffers(gl) {
     4,  5,  6,      4,  6,  7,    // back
     8,  9,  10,     8,  10, 11,   // top
     12, 13, 14,     12, 14, 15,   // bottom
-    16, 17, 18,     16, 18, 19,   // right
-    20, 21, 22,     20, 22, 23,   // left
   ];
 
   // Now send the element array to GL
@@ -202,11 +230,17 @@ function initBuffers(gl) {
 //
 // Draw the scene.
 //
-function drawScene(gl, programInfo, buffers, deltaTime) {
-  gl.clearColor(0.5, 0.5, 0.5, 1.0);  // Clear to black, fully opaque
+function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
+  // Unpack variables from program control
+  let { radius, cameraAngleRadian, perspectiveType } = programControls;
+
+  gl.clearColor(0.2, 0.2, 0.2, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+
+  // Set the viewport
+  gl.viewport(0.0, 0.0, gl.canvas.clientWidth, gl.canvas.clientHeight);
 
   // Clear the canvas before we start drawing on it.
 
@@ -220,18 +254,45 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   // and 100 units away from the camera.
 
   const fieldOfView = 45 * Math.PI / 180;   // in radians
-  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+  const left = 0;
+  const top = 0;
+  const right = gl.canvas.clientWidth;
+  const bottom = gl.canvas.clientHeight;
+  const aspect = (right - left) / (bottom - top);
   const zNear = 0.1;
   const zFar = 100.0;
   const projectionMatrix = mat4.create();
 
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
-  mat4.perspective(projectionMatrix,
-                   fieldOfView,
-                   aspect,
-                   zNear,
-                   zFar);
+  if (perspectiveType == "perspective") {
+    mat4.perspective(projectionMatrix,
+        fieldOfView,
+        aspect,
+        zNear,
+        zFar);
+  } else if (perspectiveType == "orthographic") {
+    mat4.ortho(projectionMatrix,
+        -aspect,
+        aspect,
+        -1.0,
+        1.0,
+        zNear,
+        zFar);
+    // Change the radius
+    radius *= (2.0 / 5.5);
+  } else if (perspectiveType == "oblique") {
+    mat4.ortho(projectionMatrix,
+        -aspect,
+        aspect,
+        -1.0,
+        1.0,
+        zNear,
+        zFar);
+    // Change the radius
+    radius *= (1.5 / 5.5);
+    oblique(projectionMatrix, 80, 90);
+  }
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
@@ -242,15 +303,19 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
   mat4.translate(modelViewMatrix,     // destination matrix
                  modelViewMatrix,     // matrix to translate
-                 [-0.0, -0.0, -5.5]);  // amount to translate
-  mat4.rotate(modelViewMatrix,  // destination matrix
-              modelViewMatrix,  // matrix to rotate
-              cubeRotation,     // amount to rotate in radians
-              [0, 0, 1]);       // axis to rotate around (Z)
-  mat4.rotate(modelViewMatrix,  // destination matrix
-              modelViewMatrix,  // matrix to rotate
-              cubeRotation * .7,// amount to rotate in radians
-              [0, 1, 0]);       // axis to rotate around (X)
+                 [0.0, 0.0, -radius]);  // amount to translate
+  mat4.rotate(modelViewMatrix,      // destination matrix
+              modelViewMatrix,      // matrix to rotate
+              cameraAngleRadian,   // amount to rotate
+              [0, 1, 0]);           // axis to rotate around (Y)
+  // mat4.rotate(modelViewMatrix,  // destination matrix
+  //             modelViewMatrix,  // matrix to rotate
+  //             cubeRotation,     // amount to rotate in radians
+  //             [0, 0, 1]);       // axis to rotate around (Z)
+  // mat4.rotate(modelViewMatrix,  // destination matrix
+  //             modelViewMatrix,  // matrix to rotate
+  //             cubeRotation * .7,// amount to rotate in radians
+  //             [0, 1, 0]);       // axis to rotate around (X)
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute
@@ -311,7 +376,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
       modelViewMatrix);
 
   {
-    const vertexCount = 36;
+    const vertexCount = 24;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
