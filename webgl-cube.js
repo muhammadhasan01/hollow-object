@@ -67,10 +67,18 @@ function main() {
 
   // Declare variables
   var then = 0;
-  var radius = 5.5;
-  var cameraAngleRadian = 0;
+
+  // Declare variables DOM
   var cameraAngleDOM = document.getElementById('cameraAngle');
   var cameraZoomDOM = document.getElementById('cameraZoom');
+  var perspectiveDOM = document.getElementById('perspectiveOption');
+
+  // Declare program controls variables from input
+  var programControls = {
+    radius: 5.5,
+    cameraAngleRadian: 0,
+    perspectiveType: "oblique",
+  };
 
   // Draw the scene repeatedly
   function render(now) {
@@ -78,7 +86,7 @@ function main() {
     const deltaTime = now - then;
     then = now;
 
-    drawScene(gl, programInfo, buffers, deltaTime, radius, cameraAngleRadian);
+    drawScene(gl, programInfo, buffers, deltaTime, programControls);
 
     requestAnimationFrame(render);
   }
@@ -94,16 +102,22 @@ function main() {
 
   // Render function if the camera angle is changed
   cameraAngleDOM.oninput = (e) => {
-    cameraAngleRadian = valForAngle(e.target.value);
+    programControls.cameraAngleRadian = valForAngle(e.target.value);
 
     requestAnimationFrame(render);
   }
   // Render function if the camera zoom is changed
   cameraZoomDOM.oninput = (e) => {
-    radius = valForZoom(e.target.value);
+    programControls.radius = valForZoom(e.target.value);
 
     requestAnimationFrame(render);
   };
+  // Render function if the perspective option is changed
+  perspectiveDOM.onchange = (e) => {
+    programControls.perspectiveType = e.target.value;
+
+    requestAnimationFrame(render);
+  }
 
   requestAnimationFrame(render);
 }
@@ -216,7 +230,10 @@ function initBuffers(gl) {
 //
 // Draw the scene.
 //
-function drawScene(gl, programInfo, buffers, deltaTime, radius, cameraAngleRadians) {
+function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
+  // Unpack variables from program control
+  let { radius, cameraAngleRadian, perspectiveType } = programControls;
+
   gl.clearColor(0.2, 0.2, 0.2, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
@@ -237,18 +254,45 @@ function drawScene(gl, programInfo, buffers, deltaTime, radius, cameraAngleRadia
   // and 100 units away from the camera.
 
   const fieldOfView = 45 * Math.PI / 180;   // in radians
-  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+  const left = 0;
+  const top = 0;
+  const right = gl.canvas.clientWidth;
+  const bottom = gl.canvas.clientHeight;
+  const aspect = (right - left) / (bottom - top);
   const zNear = 0.1;
   const zFar = 100.0;
   const projectionMatrix = mat4.create();
 
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
-  mat4.perspective(projectionMatrix,
-                   fieldOfView,
-                   aspect,
-                   zNear,
-                   zFar);
+  if (perspectiveType == "perspective") {
+    mat4.perspective(projectionMatrix,
+        fieldOfView,
+        aspect,
+        zNear,
+        zFar);
+  } else if (perspectiveType == "orthographic") {
+    mat4.ortho(projectionMatrix,
+        -aspect,
+        aspect,
+        -1.0,
+        1.0,
+        zNear,
+        zFar);
+    // Change the radius
+    radius *= (2.0 / 5.5);
+  } else if (perspectiveType == "oblique") {
+    mat4.ortho(projectionMatrix,
+        -aspect,
+        aspect,
+        -1.0,
+        1.0,
+        zNear,
+        zFar);
+    // Change the radius
+    radius *= (1.5 / 5.5);
+    oblique(projectionMatrix, 80, 90);
+  }
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
@@ -262,7 +306,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, radius, cameraAngleRadia
                  [0.0, 0.0, -radius]);  // amount to translate
   mat4.rotate(modelViewMatrix,      // destination matrix
               modelViewMatrix,      // matrix to rotate
-              cameraAngleRadians,   // amount to rotate
+              cameraAngleRadian,   // amount to rotate
               [0, 1, 0]);           // axis to rotate around (Y)
   // mat4.rotate(modelViewMatrix,  // destination matrix
   //             modelViewMatrix,  // matrix to rotate
