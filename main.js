@@ -14,7 +14,7 @@ function main(data) {
     attribute vec4 aVertexColor;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
-    letying lowp vec4 vColor;
+    varying lowp vec4 vColor;
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
       vColor = aVertexColor;
@@ -23,7 +23,7 @@ function main(data) {
 
   // Fragment shader program
   const fsSource = `
-    letying lowp vec4 vColor;
+    varying lowp vec4 vColor;
     void main(void) {
       gl_FragColor = vColor;
     }
@@ -53,61 +53,11 @@ function main(data) {
   // objects we'll be drawing.
   const buffers = initBuffers(gl, data);
 
-  // Declare letiables
-  let then = 0;
-
-  // Declare letiables DOM
-  let cameraAngleDOM = document.getElementById('cameraAngle');
-  let cameraZoomDOM = document.getElementById('cameraZoom');
-  let perspectiveDOM = document.getElementById('perspectiveOption');
-
-  // Declare program controls letiables from input
-  let programControls = {
-    radius: 5.5,
-    cameraAngleRadian: 0,
-    perspectiveType: "oblique",
-    vertexCount: data.vertexCount
-  };
-
   // Draw the scene repeatedly
-  function render(now) {
-    now *= 0.001;  // convert to seconds
-    const deltaTime = now - then;
-    then = now;
-
-    drawScene(gl, programInfo, buffers, deltaTime, programControls);
-
+  function render() {
+    drawScene(gl, programInfo, buffers, data.vertexCount);
     requestAnimationFrame(render);
   }
-
-  // Helper function for camera angle input
-  function valForAngle(r) {
-    return ((r - 50.0) * Math.PI) / 25.0;
-  }
-  // Helper function for camera zoom input
-  function valForZoom(r) {
-    return -((r - 50.0) / 25.0) + 5.5;
-  }
-
-  // Render function if the camera angle is changed
-  cameraAngleDOM.oninput = (e) => {
-    programControls.cameraAngleRadian = valForAngle(e.target.value);
-
-    requestAnimationFrame(render);
-  }
-  // Render function if the camera zoom is changed
-  cameraZoomDOM.oninput = (e) => {
-    programControls.radius = valForZoom(e.target.value);
-
-    requestAnimationFrame(render);
-  };
-  // Render function if the perspective option is changed
-  perspectiveDOM.onchange = (e) => {
-    programControls.perspectiveType = e.target.value;
-
-    requestAnimationFrame(render);
-  }
-
   requestAnimationFrame(render);
 }
 
@@ -166,9 +116,8 @@ function initBuffers(gl, data) {
 }
 
 // Draw the scene.
-function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
-  // Unpack letiables from program control
-  let { radius, cameraAngleRadian, perspectiveType, vertexCount } = programControls;
+function drawScene(gl, programInfo, buffers, vertexCount) {
+  // Unpack variables from program control
 
   gl.clearColor(0.2, 0.2, 0.2, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);            // Clear everything
@@ -197,18 +146,21 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
   const aspect = (right - left) / (bottom - top);
   const zNear = 0.1;
   const zFar = 100.0;
-  const projectionMatrix = mat4.create();
+  const projectionMatrix = create();
+  const cameraAngleRadian = ((document.getElementById('cameraAngle').value  - 50.0) * Math.PI) / 25.0;
+  const projectionType = document.getElementById('perspectiveOption').value;
+  let radius = -((document.getElementById('cameraZoom').value - 50.0) / 25.0) + 5.5;
 
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
-  if (perspectiveType === "perspective") {
-    mat4.perspective(projectionMatrix,
+  if (projectionType === "perspective") {
+    perspective(projectionMatrix,
         fieldOfView,
         aspect,
         zNear,
         zFar);
-  } else if (perspectiveType === "orthographic") {
-    mat4.ortho(projectionMatrix,
+  } else if (projectionType === "orthographic") {
+    ortho(projectionMatrix,
         -aspect,
         aspect,
         -1.0,
@@ -217,8 +169,8 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
         zFar);
     // Change the radius
     radius *= (2.0 / 5.5);
-  } else if (perspectiveType === "oblique") {
-    mat4.ortho(projectionMatrix,
+  } else if (projectionType === "oblique") {
+    ortho(projectionMatrix,
         -aspect,
         aspect,
         -1.0,
@@ -232,28 +184,27 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
-  const modelViewMatrix = mat4.create();
+  const modelViewMatrix = create();
 
   // Now move the drawing position a bit to where we want to
   // start drawing the square.
-
   // Camera configuration
-  mat4.translate(modelViewMatrix,     // destination matrix
+  translate(modelViewMatrix,     // destination matrix
                  modelViewMatrix,     // matrix to translate
                  [0.0, 0.0, -radius]);  // amount to translate
-  mat4.rotate(modelViewMatrix,      // destination matrix
+  rotate(modelViewMatrix,      // destination matrix
               modelViewMatrix,      // matrix to rotate
               cameraAngleRadian,   // amount to rotate
               [0, 1, 0]);           // axis to rotate around (Y)
 
   // Translation, Rotation, and Scaling values
-  let x = -document.getElementById("x").value / 100;
-  let y = -document.getElementById("y").value / 100;
-  let z = -document.getElementById("z").value / 100;
-  let angleX = document.getElementById("angleX").value / 100;
-  let angleY = document.getElementById("angleY").value / 100;
-  let angleZ = document.getElementById("angleZ").value / 100;
-  let scales = document.getElementById("scale").value;
+  const x = document.getElementById("x").value / 100;
+  const y = document.getElementById("y").value / 100;
+  const z = document.getElementById("z").value / 100;
+  const angleX = document.getElementById("angleX").value / 100;
+  const angleY = document.getElementById("angleY").value / 100;
+  const angleZ = document.getElementById("angleZ").value / 100;
+  const scales = document.getElementById("scale").value;
 
   // Translation
   translate(modelViewMatrix,    // destination matrix
@@ -346,10 +297,6 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
   }
-
-  // Update the rotation for the next draw
-
-  cubeRotation += deltaTime;
 }
 
 //
