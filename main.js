@@ -119,7 +119,7 @@ function initBuffers(gl, data) {
 function drawScene(gl, programInfo, buffers, vertexCount) {
   // Unpack variables from program control
 
-  gl.clearColor(0.2, 0.2, 0.2, 1.0);  // Clear to black, fully opaque
+  gl.clearColor(0.23, 0.23, 0.23, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);            // Clear everything
   gl.enable(gl.DEPTH_TEST);            // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
@@ -145,7 +145,7 @@ function drawScene(gl, programInfo, buffers, vertexCount) {
   const bottom = gl.canvas.clientHeight;
   const aspect = (right - left) / (bottom - top);
   const zNear = 0.1;
-  const zFar = 100.0;
+  const zFar = 1000.0;
   const projectionMatrix = create();
   const cameraAngleRadian = ((document.getElementById('cameraAngle').value  - 50.0) * Math.PI) / 25.0;
   const projectionType = document.getElementById('perspectiveOption').value;
@@ -179,7 +179,7 @@ function drawScene(gl, programInfo, buffers, vertexCount) {
         zFar);
     // Change the radius
     radius *= (1.5 / 5.5);
-    oblique(projectionMatrix, 80, 90);
+    oblique(projectionMatrix, 78, 89);
   }
 
   // Set the drawing position to the "identity" point, which is
