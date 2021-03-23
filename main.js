@@ -1,31 +1,20 @@
-var cubeRotation = 0.0;
-
-
-
-main();
-
-//
-// Start here
-//
-function main() {
+function main(data) {
   const canvas = document.querySelector('#glcanvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
   // If we don't have a GL context, give up now
-
   if (!gl) {
     alert('Unable to initialize WebGL. Your browser or machine may not support it.');
     return;
   }
 
   // Vertex shader program
-
   const vsSource = `
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColor;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
-    varying lowp vec4 vColor;
+    letying lowp vec4 vColor;
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
       vColor = aVertexColor;
@@ -33,9 +22,8 @@ function main() {
   `;
 
   // Fragment shader program
-
   const fsSource = `
-    varying lowp vec4 vColor;
+    letying lowp vec4 vColor;
     void main(void) {
       gl_FragColor = vColor;
     }
@@ -63,21 +51,22 @@ function main() {
 
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
-  const buffers = initBuffers(gl);
+  const buffers = initBuffers(gl, data);
 
-  // Declare variables
-  var then = 0;
+  // Declare letiables
+  let then = 0;
 
-  // Declare variables DOM
-  var cameraAngleDOM = document.getElementById('cameraAngle');
-  var cameraZoomDOM = document.getElementById('cameraZoom');
-  var perspectiveDOM = document.getElementById('perspectiveOption');
+  // Declare letiables DOM
+  let cameraAngleDOM = document.getElementById('cameraAngle');
+  let cameraZoomDOM = document.getElementById('cameraZoom');
+  let perspectiveDOM = document.getElementById('perspectiveOption');
 
-  // Declare program controls variables from input
-  var programControls = {
+  // Declare program controls letiables from input
+  let programControls = {
     radius: 5.5,
     cameraAngleRadian: 0,
     perspectiveType: "oblique",
+    vertexCount: data.vertexCount
   };
 
   // Draw the scene repeatedly
@@ -128,7 +117,8 @@ function main() {
 // Initialize the buffers we'll need. For this demo, we just
 // have one object -- a simple three-dimensional cube.
 //
-function initBuffers(gl) {
+function initBuffers(gl, data) {
+  const { positions, indices, faceColors } = data;
 
   // Create a buffer for the cube's vertex positions.
 
@@ -139,55 +129,15 @@ function initBuffers(gl) {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  // Now create an array of positions for the cube.
-
-  const positions = [
-    // Front face
-    -1.0, -1.0,  1.0,
-     1.0, -1.0,  1.0,
-     1.0,  1.0,  1.0,
-    -1.0,  1.0,  1.0,
-
-    // Back face
-    -1.0, -1.0, -1.0,
-    -1.0,  1.0, -1.0,
-     1.0,  1.0, -1.0,
-     1.0, -1.0, -1.0,
-
-    // Top face
-    -1.0,  1.0, -1.0,
-    -1.0,  1.0,  1.0,
-     1.0,  1.0,  1.0,
-     1.0,  1.0, -1.0,
-
-    // Bottom face
-    -1.0, -1.0, -1.0,
-     1.0, -1.0, -1.0,
-     1.0, -1.0,  1.0,
-    -1.0, -1.0,  1.0,
-  ];
-
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
   // JavaScript array, then use it to fill the current buffer.
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-  // Now set up the colors for the faces. We'll use solid colors
-  // for each face.
-
-  const faceColors = [
-    [1.0,  1.0,  1.0,  1.0],    // Front face: white
-    [1.0,  0.0,  0.0,  1.0],    // Back face: red
-    [0.0,  1.0,  0.0,  1.0],    // Top face: green
-    [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-  ];
-
   // Convert the array of colors into a table for all the vertices.
-
-  var colors = [];
-
-  for (var j = 0; j < faceColors.length; ++j) {
+  let colors = [];
+  for (let j = 0; j < faceColors.length; ++j) {
     const c = faceColors[j];
 
     // Repeat each color four times for the four vertices of the face
@@ -204,19 +154,7 @@ function initBuffers(gl) {
   const indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-  // This array defines each face as two triangles, using the
-  // indices into the vertex array to specify each triangle's
-  // position.
-
-  const indices = [
-    0,  1,  2,      0,  2,  3,    // front
-    4,  5,  6,      4,  6,  7,    // back
-    8,  9,  10,     8,  10, 11,   // top
-    12, 13, 14,     12, 14, 15,   // bottom
-  ];
-
   // Now send the element array to GL
-
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
       new Uint16Array(indices), gl.STATIC_DRAW);
 
@@ -227,16 +165,14 @@ function initBuffers(gl) {
   };
 }
 
-//
 // Draw the scene.
-//
 function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
-  // Unpack variables from program control
-  let { radius, cameraAngleRadian, perspectiveType } = programControls;
+  // Unpack letiables from program control
+  let { radius, cameraAngleRadian, perspectiveType, vertexCount } = programControls;
 
   gl.clearColor(0.2, 0.2, 0.2, 1.0);  // Clear to black, fully opaque
-  gl.clearDepth(1.0);                 // Clear everything
-  gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+  gl.clearDepth(1.0);            // Clear everything
+  gl.enable(gl.DEPTH_TEST);            // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
 
   // Set the viewport
@@ -265,13 +201,13 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
 
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
-  if (perspectiveType == "perspective") {
+  if (perspectiveType === "perspective") {
     mat4.perspective(projectionMatrix,
         fieldOfView,
         aspect,
         zNear,
         zFar);
-  } else if (perspectiveType == "orthographic") {
+  } else if (perspectiveType === "orthographic") {
     mat4.ortho(projectionMatrix,
         -aspect,
         aspect,
@@ -281,7 +217,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
         zFar);
     // Change the radius
     radius *= (2.0 / 5.5);
-  } else if (perspectiveType == "oblique") {
+  } else if (perspectiveType === "oblique") {
     mat4.ortho(projectionMatrix,
         -aspect,
         aspect,
@@ -301,6 +237,7 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
   // Now move the drawing position a bit to where we want to
   // start drawing the square.
 
+  // Camera configuration
   mat4.translate(modelViewMatrix,     // destination matrix
                  modelViewMatrix,     // matrix to translate
                  [0.0, 0.0, -radius]);  // amount to translate
@@ -308,14 +245,43 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
               modelViewMatrix,      // matrix to rotate
               cameraAngleRadian,   // amount to rotate
               [0, 1, 0]);           // axis to rotate around (Y)
-  // mat4.rotate(modelViewMatrix,  // destination matrix
-  //             modelViewMatrix,  // matrix to rotate
-  //             cubeRotation,     // amount to rotate in radians
-  //             [0, 0, 1]);       // axis to rotate around (Z)
-  // mat4.rotate(modelViewMatrix,  // destination matrix
-  //             modelViewMatrix,  // matrix to rotate
-  //             cubeRotation * .7,// amount to rotate in radians
-  //             [0, 1, 0]);       // axis to rotate around (X)
+
+  // Translation, Rotation, and Scaling values
+  let x = -document.getElementById("x").value / 100;
+  let y = -document.getElementById("y").value / 100;
+  let z = -document.getElementById("z").value / 100;
+  let angleX = document.getElementById("angleX").value / 100;
+  let angleY = document.getElementById("angleY").value / 100;
+  let angleZ = document.getElementById("angleZ").value / 100;
+  let scales = document.getElementById("scale").value;
+
+  // Translation
+  translate(modelViewMatrix,    // destination matrix
+            modelViewMatrix,    // matrix to translate
+            [x, y, z]);         // amount to translate
+
+  // Rotation on X axis
+  rotate(modelViewMatrix,   // destination matrix
+          modelViewMatrix,    // matrix to rotate
+          angleX,             // amount to rotate in radians
+          [0, 1, 0]);         // axis to rotate around (X)
+        
+  // Rotation on Y axis
+  rotate(modelViewMatrix,   // destination matrix
+        modelViewMatrix,    // matrix to rotate
+        angleY,             // amount to rotate in radians
+        [1, 0, 0]);         // axis to rotate around (Y)
+
+  // Rotation on Z axis
+  rotate(modelViewMatrix,   // destination matrix
+        modelViewMatrix,    // matrix to rotate
+        angleZ,             // amount to rotate in radians
+        [0, 0, 1]);         // axis to rotate around (Z)
+
+  // Scale
+  scale(modelViewMatrix,        // destination matrix
+    modelViewMatrix,            // matrix to translate
+    [scales, scales, scales]);    // amount to translate
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute
@@ -376,7 +342,6 @@ function drawScene(gl, programInfo, buffers, deltaTime, programControls) {
       modelViewMatrix);
 
   {
-    const vertexCount = 24;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
